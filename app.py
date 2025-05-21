@@ -1,80 +1,71 @@
-from flask import Flask, request, abort
-from linebot.v3 import WebhookHandler
-from linebot.v3.exceptions import InvalidSignatureError
+from flask import Flask, request, abort ,jsonify
+
+from linebot.v3 import (
+    WebhookHandler
+)
+from linebot.v3.exceptions import (
+    InvalidSignatureError
+)
 from linebot.v3.messaging import (
     Configuration,
     ApiClient,
     MessagingApi,
     ReplyMessageRequest,
-    TextMessage,
-    ImageMessage  # 新增圖片訊息支援
+    TextMessage
 )
 from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent
 )
-import json
-import os
+
+import sqlite3
 
 app = Flask(__name__)
 
-# 重要：建議將憑證儲存在環境變數中
-configuration = Configuration(
-    access_token='tenvf9n2QkkW2O5KORk24yuK/JG6z2TRunPRVrc8rIna1ZpImWXuBAkwnV2iLqjPjH04TP2Pb2rYiA9vdr1lG6dVL6Fld6L0UPHQDYBm213nP1DrN1ZAX4VNf9lfR7vT1mdDqvHCuBBMBSMBgwWXHAdB04t89/1O/w1cDnyilFU='
-)
+configuration = Configuration(access_token='tenvf9n2QkkW2O5KORk24yuK/JG6z2TRunPRVrc8rIna1ZpImWXuBAkwnV2iLqjPjH04TP2Pb2rYiA9vdr1lG6dVL6Fld6L0UPHQDYBm213nP1DrN1ZAX4VNf9lfR7vT1mdDqvHCuBBMBSMBgwWXHAdB04t89/1O/w1cDnyilFU=')
 handler = WebhookHandler('7674bdd50a627908e4c0b947246229a6')
+
 
 @app.route("/callback", methods=['POST'])
 def callback():
-    # 取得 X-Line-Signature 標頭值
+    # get X-Line-Signature header value
     signature = request.headers['X-Line-Signature']
 
-    # 取得請求內容
+    # get request body as text
     body = request.get_data(as_text=True)
-    app.logger.info("收到請求內容: " + body)
+    app.logger.info("Request body: " + body)
 
-    # 處理 webhook 請求
+    # handle webhook body
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
-        app.logger.error("簽名驗證失敗，請檢查您的頻道存取權杖/頻道密鑰")
+        app.logger.info("Invalid signature. Please check your channel access token/channel secret.")
         abort(400)
 
     return 'OK'
+ # 接收訂單
+@app.route("/order", methods=["POST"])
 
-@handler.add(MessageEvent, message=TextMessageContent)
-def handle_message(event):
-    # 取得使用者傳送的訊息
-    user_message = event.message.text
+# 此處應該移除這個JavaScript風格的結束括號，因為這是Python文件
+def order():
+    # 获取订单数据
+    order_data = request.json
     
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        
-        if user_message == '近期優惠':
-            # 回傳圖片訊息
-            img_url = 'https://upload.wikimedia.org/wikipedia/en/a/a6/Pok%C3%A9mon_Pikachu_art.png'
-            messages = [
-                ImageMessage(
-                    original_content_url=img_url,
-                    preview_image_url=img_url
-                )
-            ]
-        else:
-            # 預設回傳相同文字
-            messages = [TextMessage(text=f"{user_message}")]
-        
-        # 回覆訊息
-        line_bot_api.reply_message_with_http_info(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=messages
-            )
-        )
+    # 连接到数据库
+    conn = sqlite3.connect('order.db')
+    cursor = conn.cursor()
+    
+    # 插入订单数据
+    cursor.execute("INSERT INTO orders (user_id, column_one, column_two) VALUES (?, ?, ?)", (order_data['user_id'], order_data['column_one'], order_data['column_two']))
+    conn.commit()
+    conn.close()
+    
+    # 返回确认消息
+    return jsonify({"message": "订单已接收"})
 
-# 串接資料庫
-
+# Initialize database
 def init_db():
-    conn = sqlite3.connect('你的db檔名')
+    conn = sqlite3.connect('order.db')
     print ("資料庫打開成功")
     c = conn.cursor()
     c.execute('''
@@ -89,5 +80,36 @@ def init_db():
     conn.commit()
     conn.close()
 
+
+@handler.add(MessageEvent, message=TextMessageContent)
+def handle_message(event):
+    with ApiClient(configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        conn = sqlite3.connect('order.db')
+        cursor = conn.cursor()
+        
+        # 查询订单状态
+        order_id = event.message.text  # 假设用户发送订单号
+        cursor.execute("SELECT status FROM orders WHERE order_id = ?", (order_id,))
+        result = cursor.fetchone()
+        
+        # 检查查询结果并回复
+        if result:
+            status = result[0]
+            reply_text = f"您的订单状态是：{status}"
+        else:
+            reply_text = "未找到该订单，请检查订单号是否正确。"
+        
+        # 关闭数据库连接
+        conn.close()
+        
+        # 回复用户
+        line_bot_api.reply_message_with_http_info(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply_text)]
+            )
+        )
+
 if __name__ == "__main__":
-    app.run()
+    app.run(port=5001)
