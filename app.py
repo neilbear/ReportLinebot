@@ -45,8 +45,6 @@ def callback():
     return 'OK'
  # 接收訂單
 @app.route("/order", methods=["POST"])
-
-# 此處應該移除這個JavaScript風格的結束括號，因為這是Python文件
 def order():
     # 获取订单数据
     order_data = request.json
@@ -58,10 +56,13 @@ def order():
     # 插入订单数据
     cursor.execute("INSERT INTO orders (user_id, column_one, column_two) VALUES (?, ?, ?)", (order_data['user_id'], order_data['column_one'], order_data['column_two']))
     conn.commit()
+    
+    # 获取生成的订单ID
+    order_id = cursor.lastrowid
     conn.close()
     
     # 返回确认消息
-    return jsonify({"message": "订单已接收"})
+    return jsonify({"message": "订单已接收", "order_id": order_id})
 
 # Initialize database
 def init_db():
