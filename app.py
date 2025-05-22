@@ -62,7 +62,7 @@ def order():
     conn.close()
     
     # 返回确认消息
-    return jsonify({"message": "订单已接收", "order_id": order_id})
+    return jsonify({"message": "訂單已接收", "order_id": order_id})
 
 # Initialize database
 def init_db():
@@ -97,9 +97,9 @@ def handle_message(event):
         # 检查查询结果并回复
         if result:
             status = result[0]
-            reply_text = f"您的订单状态是：{status}"
+            reply_text = f"您的訂單狀態是：{status}"
         else:
-            reply_text = "未找到该订单，请检查订单号是否正确。"
+            reply_text = "未找到該訂單，請檢查訂單號碼是否正確。"
         
         # 关闭数据库连接
         conn.close()
