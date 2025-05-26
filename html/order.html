@@ -3,32 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <title>線上點餐</title>
+<link rel="stylesheet" href="/static/order.css">
+
 </head>
 <body>
     <h2>請選擇餐點</h2>
     <form id="orderForm">
-        <label>餐點：
-            <select name="item" required>
-                <option value="漢堡">漢堡</option>
-                <option value="薯條">薯條</option>
-                <option value="可樂">可樂</option>
-            </select>
-        </label>
-        <br>
-        <label>數量：<input type="number" name="quantity" min="1" value="1" required></label>
-        <br>
+        <div id="menu-list">
+            <div class="menu-item">
+                <img src="/static/za42-listing.jpg" alt="漢堡" width="80"><br>
+                <label>餐點：<input type="text" name="item" value="漢堡" readonly></label>
+                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
+            </div>
+            <div class="menu-item">
+                <img src="/static/za42-listing.jpg" alt="薯條" width="80"><br>
+                <label>餐點：<input type="text" name="item" value="薯條" readonly></label>
+                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
+            </div>
+            <!-- 可依需求新增更多餐點 -->
+        </div>
         <button type="submit">送出訂單</button>
     </form>
     <div id="result"></div>
     <script>
     document.getElementById('orderForm').onsubmit = async function(e) {
         e.preventDefault();
-        const form = e.target;
-        const data = {
-            user_id: 'guest', // 可根據實際需求帶入用戶資訊
-            column_one: form.item.value,
-            column_two: form.quantity.value
-        };
+        const items = [];
+        document.querySelectorAll('.menu-item').forEach(div => {
+            const item = div.querySelector('input[name="item"]').value;
+            const quantity = parseInt(div.querySelector('input[name="quantity"]').value);
+            if(quantity > 0) items.push({item, quantity});
+        });
+        if(items.length === 0) {
+            document.getElementById('result').innerHTML = '請至少選擇一項餐點';
+            return;
+        }
+        const data = {user_id: 'guest', items};
         const res = await fetch('/order', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
