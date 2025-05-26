@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>線上點餐</title>
+</head>
+<body>
+    <h2>請選擇餐點</h2>
+    <form id="orderForm">
+        <label>餐點：
+            <select name="item" required>
+                <option value="漢堡">漢堡</option>
+                <option value="薯條">薯條</option>
+                <option value="可樂">可樂</option>
+            </select>
+        </label>
+        <br>
+        <label>數量：<input type="number" name="quantity" min="1" value="1" required></label>
+        <br>
+        <button type="submit">送出訂單</button>
+    </form>
+    <div id="result"></div>
+    <script>
+    document.getElementById('orderForm').onsubmit = async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const data = {
+            user_id: 'guest', // 可根據實際需求帶入用戶資訊
+            column_one: form.item.value,
+            column_two: form.quantity.value
+        };
+        const res = await fetch('/order', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        document.getElementById('result').innerHTML = '您的訂單已送出，訂單編號(order_id)：' + result.order_id;
+    };
+    </script>
+</body>
+</html>

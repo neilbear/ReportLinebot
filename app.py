@@ -1,4 +1,5 @@
 from flask import Flask, request, abort ,jsonify
+from flask import send_from_directory
 
 from linebot.v3 import (
     WebhookHandler
@@ -43,26 +44,19 @@ def callback():
         abort(400)
 
     return 'OK'
- # 接收訂單
-@app.route("/order", methods=["POST"])
+@app.route('/order', methods=['POST'])
 def order():
-    # 获取订单数据
-    order_data = request.json
-    
-    # 连接到数据库
+    data = request.get_json()
+    user_id = data.get('user_id', 'guest')
+    item = data.get('column_one')
+    quantity = data.get('column_two')
     conn = sqlite3.connect('order.db')
-    cursor = conn.cursor()
-    
-    # 插入订单数据
-    cursor.execute("INSERT INTO orders (user_id, column_one, column_two) VALUES (?, ?, ?)", (order_data['user_id'], order_data['column_one'], order_data['column_two']))
+    c = conn.cursor()
+    c.execute('INSERT INTO orders (user_id, item, quantity) VALUES (?, ?, ?)', (user_id, item, quantity))
+    order_id = c.lastrowid
     conn.commit()
-    
-    # 获取生成的订单ID
-    order_id = cursor.lastrowid
     conn.close()
-    
-    # 返回确认消息
-    return jsonify({"message": "訂單已接收", "order_id": order_id})
+    return jsonify({'order_id': order_id})
 
 # Initialize database
 def init_db():
@@ -81,6 +75,15 @@ def init_db():
     conn.commit()
     conn.close()
 
+
+@app.route('/order', methods=['GET'])
+def order_page():
+    return send_from_directory('html', 'order.html')
+from flask import send_from_directory
+
+@app.route('/html/<path:filename>')
+def serve_html(filename):
+    return send_from_directory('html', filename)
 
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
