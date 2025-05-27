@@ -51,10 +51,12 @@ h2 {
 }
 .menu-item-labels {
     display: flex;
-    justify-content: center;
-    gap: 14px;
     align-items: center;
-    margin-bottom: 8px;
+    justify-content: space-between;
+    gap: 8px;
+}
+.menu-item-labels label {
+    margin: 0;
 }
 .menu-item label {
     display: flex;
@@ -84,6 +86,23 @@ h2 {
     transition: border 0.18s;
 }
 .menu-item input[type="number"]:focus {
+    border: 1.5px solid #4a90e2;
+    outline: none;
+}
+.menu-item select {
+    width: 110px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    border: 1.5px solid #b3c6e6;
+    font-size: 1em;
+    background: #fff;
+    color: #2d3a4b;
+    font-weight: 500;
+    margin-left: 4px;
+    transition: border 0.18s;
+    box-shadow: 0 2px 8px rgba(60,80,120,0.07);
+}
+.menu-item select:focus {
     border: 1.5px solid #4a90e2;
     outline: none;
 }

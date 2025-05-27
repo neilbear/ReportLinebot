@@ -11,13 +11,31 @@
     <form id="orderForm">
         <div id="menu-list">
             <div class="menu-item">
-                <img src="/static/za42-listing.jpg" alt="漢堡" width="80"><br>
-                <label>餐點：<input type="text" name="item" value="漢堡" readonly></label>
+                <img src="/static/hamburger.jpg" alt="漢堡" width="80"><br>
+                <div class="menu-item-labels">
+                    <label for="item-select">餐點：</label>
+                    <select id="item-select" name="item">
+                        <option value="hamburger">漢堡</option>
+                        <option value="french_fries">薯條</option>
+                        <option value="Chinese_omelet">蛋餅</option>
+                        <option value="turnip_cake">蘿蔔糕</option>
+                    </select>
+                </div>
                 <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
             </div>
             <div class="menu-item">
-                <img src="/static/za42-listing.jpg" alt="薯條" width="80"><br>
+                <img src="/static/french_fries.jpg" alt="薯條" width="80"><br>
                 <label>餐點：<input type="text" name="item" value="薯條" readonly></label>
+                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
+            </div>
+            <div class="menu-item">
+                <img src="/static/Chinese omelet.jpg" alt="蛋餅" width="80"><br>
+                <label>餐點：<input type="text" name="item" value="蛋餅" readonly></label>
+                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
+            </div>
+            <div class="menu-item">
+                <img src="/static/turnip_cake.jpg" alt="蘿蔔糕" width="80"><br>
+                <label>餐點：<input type="text" name="item" value="蘿蔔糕" readonly></label>
                 <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
             </div>
             <!-- 可依需求新增更多餐點 -->
