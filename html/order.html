@@ -1,41 +1,35 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
     <meta charset="UTF-8">
     <title>線上點餐</title>
-<link rel="stylesheet" href="/static/order.css">
-
+    <link rel="stylesheet" href="/static/order.css">
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
 </head>
+
 <body>
     <h2>請選擇餐點</h2>
     <form id="orderForm">
         <div id="menu-list">
             <div class="menu-item">
-                <img src="/static/hamburger.jpg" alt="漢堡" width="80"><br>
-                <div class="menu-item-labels">
-                    <label for="item-select">餐點：</label>
-                    <select id="item-select" name="item">
-                        <option value="hamburger">漢堡</option>
-                        <option value="french_fries">薯條</option>
-                        <option value="Chinese_omelet">蛋餅</option>
-                        <option value="turnip_cake">蘿蔔糕</option>
+                <img src="/static/za42-listing.jpg" alt="漢堡" width="80"><br>
+                <label>餐點：
+                    <select name="item">
+                        <option value="漢堡">漢堡</>
+                        <option value="薯條">薯條</>
                     </select>
-                </div>
+                </label>
                 <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
             </div>
             <div class="menu-item">
-                <img src="/static/french_fries.jpg" alt="薯條" width="80"><br>
-                <label>餐點：<input type="text" name="item" value="薯條" readonly></label>
-                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
-            </div>
-            <div class="menu-item">
-                <img src="/static/Chinese omelet.jpg" alt="蛋餅" width="80"><br>
-                <label>餐點：<input type="text" name="item" value="蛋餅" readonly></label>
-                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
-            </div>
-            <div class="menu-item">
-                <img src="/static/turnip_cake.jpg" alt="蘿蔔糕" width="80"><br>
-                <label>餐點：<input type="text" name="item" value="蘿蔔糕" readonly></label>
+                <img src="/static/za42-listing.jpg" alt="薯條" width="80"><br>
+                <label>餐點：
+                    <select name="item">
+                        <option value="漢堡">漢堡</>
+                        <option value="薯條">薯條</>
+                    </select>
+                </label>
                 <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
             </div>
             <!-- 可依需求新增更多餐點 -->
@@ -44,27 +38,28 @@
     </form>
     <div id="result"></div>
     <script>
-    document.getElementById('orderForm').onsubmit = async function(e) {
-        e.preventDefault();
-        const items = [];
-        document.querySelectorAll('.menu-item').forEach(div => {
-            const item = div.querySelector('input[name="item"]').value;
-            const quantity = parseInt(div.querySelector('input[name="quantity"]').value);
-            if(quantity > 0) items.push({item, quantity});
-        });
-        if(items.length === 0) {
-            document.getElementById('result').innerHTML = '請至少選擇一項餐點';
-            return;
-        }
-        const data = {user_id: 'guest', items};
-        const res = await fetch('/order', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        });
-        const result = await res.json();
-        document.getElementById('result').innerHTML = '您的訂單已送出，訂單編號(order_id)：' + result.order_id;
-    };
+        document.getElementById('orderForm').onsubmit = async function (e) {
+            e.preventDefault();
+            const items = [];
+            document.querySelectorAll('.menu-item').forEach(div => {
+                const item = div.querySelector('select[name="item"]').value;
+                const quantity = parseInt(div.querySelector('input[name="quantity"]').value);
+                if (quantity > 0) items.push({ name: item, quantity });
+            });
+            if (items.length === 0) {
+                document.getElementById('result').innerHTML = '請至少選擇一項餐點';
+                return;
+            }
+            const data = { user_id: 'guest', items };
+            const res = await fetch('/order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            document.getElementById('result').innerHTML = '您的訂單已送出，訂單編號(order_id)：' + result.order_id;
+        };
     </script>
 </body>
+
 </html>

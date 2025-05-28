@@ -21,7 +21,7 @@ from linebot.v3.webhooks import (
 
 import sqlite3
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__)
 
 configuration = Configuration(access_token='tenvf9n2QkkW2O5KORk24yuK/JG6z2TRunPRVrc8rIna1ZpImWXuBAkwnV2iLqjPjH04TP2Pb2rYiA9vdr1lG6dVL6Fld6L0UPHQDYBm213nP1DrN1ZAX4VNf9lfR7vT1mdDqvHCuBBMBSMBgwWXHAdB04t89/1O/w1cDnyilFU=')
 handler = WebhookHandler('7674bdd50a627908e4c0b947246229a6')
@@ -48,38 +48,35 @@ def callback():
 def order():
     data = request.get_json()
     user_id = data.get('user_id', 'guest')
-    items = data.get('items', [])
+    items = data.get('items')
+
     conn = sqlite3.connect('order.db')
     c = conn.cursor()
-    # 建立訂單主表
-    c.execute('INSERT INTO orders (user_id) VALUES (?)', (user_id,))
-    order_id = c.lastrowid
-    # 建立訂單明細表
-    for item in items:
-        c.execute('INSERT INTO order_items (order_id, item, quantity) VALUES (?, ?, ?)', (order_id, item['item'], item['quantity']))
+
+    names = ", ".join([item['name'] for item in items])
+    quantities = ", ".join([str(item['quantity']) for item in items])
+    c.execute('INSERT INTO orders (user_id, column_one, column_two) VALUES (?, ?, ?)', (user_id, names, quantities))
+
     conn.commit()
+    order_id = c.lastrowid
     conn.close()
+
     return jsonify({'order_id': order_id})
 
 # Initialize database
 def init_db():
     conn = sqlite3.connect('order.db')
+    print ("資料庫打開成功")
     c = conn.cursor()
     c.execute('''
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id TEXT NOT NULL
+            user_id TEXT NOT NULL,
+            column_one TEXT NOT NULL,
+            column_two TEXT NOT NULL
         )
     ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS order_items (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id INTEGER NOT NULL,
-            item TEXT NOT NULL,
-            quantity INTEGER NOT NULL,
-            FOREIGN KEY(order_id) REFERENCES orders(id)
-        )
-    ''')
+    print ("資料庫創建成功")
     conn.commit()
     conn.close()
 
@@ -87,12 +84,11 @@ def init_db():
 @app.route('/order', methods=['GET'])
 def order_page():
     return send_from_directory('html', 'order.html')
+from flask import send_from_directory
 
-
-
-@app.route('/static/<path:filename>')
-def static_files(filename):
-    return send_from_directory('static', filename)
+@app.route('/html/<path:filename>')
+def serve_html(filename):
+    return send_from_directory('html', filename)
 
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
