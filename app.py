@@ -20,6 +20,7 @@ from linebot.v3.webhooks import (
 )
 
 import sqlite3
+import random
 
 app = Flask(__name__)
 
@@ -55,7 +56,9 @@ def order():
 
     names = ", ".join([item['name'] for item in items])
     quantities = ", ".join([str(item['quantity']) for item in items])
-    c.execute('INSERT INTO orders (user_id, column_one, column_two) VALUES (?, ?, ?)', (user_id, names, quantities))
+    # 随机选择状态
+    status = random.choice(['製作中', '已完成'])
+    c.execute('INSERT INTO orders (user_id, column_one, column_two, status) VALUES (?, ?, ?, ?)', (user_id, names, quantities, status))
 
     conn.commit()
     order_id = c.lastrowid
@@ -73,7 +76,8 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT NOT NULL,
             column_one TEXT NOT NULL,
-            column_two TEXT NOT NULL
+            column_two TEXT NOT NULL,
+            status TEXT NOT NULL
         )
     ''')
     print ("資料庫創建成功")
@@ -90,28 +94,45 @@ from flask import send_from_directory
 def serve_html(filename):
     return send_from_directory('html', filename)
 
+# 全局字典用于存储用户的查询状态
+user_query_status = {}
+
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        conn = sqlite3.connect('order.db')
-        cursor = conn.cursor()
-        
-        # 查询订单状态
-        order_id = event.message.text  # 假设用户发送订单号
-        cursor.execute("SELECT status FROM orders WHERE order_id = ?", (order_id,))
-        result = cursor.fetchone()
-        
-        # 检查查询结果并回复
-        if result:
-            status = result[0]
-            reply_text = f"您的訂單狀態是：{status}"
+        user_message = event.message.text.strip()
+        user_id = event.source.user_id
+
+        # 检查用户的查询状态
+        if user_query_status.get(user_id, False):
+            try:
+                order_id = int(user_message)
+                conn = sqlite3.connect('order.db')
+                cursor = conn.cursor()
+                cursor.execute("SELECT status FROM orders WHERE id = ?", (order_id,))
+                result = cursor.fetchone()
+                conn.close()
+
+                if result:
+                    status = result[0]
+                    reply_text = f"您的訂單狀態是：{status}"
+                else:
+                    reply_text = "未找到該訂單，請檢查訂單號碼是否正確。"
+            except ValueError:
+                reply_text = "訂單號無效，請輸入有效的訂單ID。"
+
+            # 重置用户的查询状态
+            user_query_status[user_id] = False
         else:
-            reply_text = "未找到該訂單，請檢查訂單號碼是否正確。"
-        
-        # 关闭数据库连接
-        conn.close()
-        
+            # 检查用户是否请求查询订单
+            if user_message.lower() == "訂單查詢":
+                reply_text = "請輸入訂單ID以查詢訂單狀態。"
+                # 设置用户的查询状态
+                user_query_status[user_id] = True
+            else:
+                reply_text = "請先輸入‘訂單查詢’以開始查詢訂單狀態。"
+
         # 回复用户
         line_bot_api.reply_message_with_http_info(
             ReplyMessageRequest(
