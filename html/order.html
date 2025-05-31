@@ -6,58 +6,490 @@
     <title>線上點餐</title>
     <link rel="stylesheet" href="/static/order.css">
     <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon">
+    <style>
+        /* 新增樣式讓訂單結果更醒目 */
+        .order-success {
+            background: linear-gradient(135deg, #e8f5e8, #f0f8f0);
+            border: 2px solid #4CAF50;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px auto;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.2);
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            animation: bounce 1s ease-in-out;
+            display: block;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateY(0);
+            }
+
+            40% {
+                transform: translateY(-10px);
+            }
+
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+
+        .success-message {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2E7D32;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .order-id-container {
+            background: #FFF3E0;
+            border: 2px solid #FF9800;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .order-id-label {
+            font-size: 16px;
+            color: #E65100;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+
+        .order-id-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FF6F00;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .total-info {
+            background: #F3E5F5;
+            border: 2px solid #9C27B0;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            font-size: 18px;
+            text-align: center;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .original-total {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .discount {
+            color: #E91E63;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .final-total {
+            color: #1976D2;
+            font-weight: bold;
+            font-size: 24px;
+            margin-bottom: 15px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .checkout-notice {
+            background: #FFEB3B;
+            color: #F57F17;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 18px;
+            border: 2px solid #FBC02D;
+            animation: pulse 2s infinite;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.02);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 確保整個結果區域置中 */
+        #result {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        /* 改善總金額顯示區域 */
+        #total-section {
+            background: #E3F2FD;
+            border: 2px solid #2196F3;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px auto;
+            text-align: center;
+            max-width: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #total-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1565C0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+    </style>
 </head>
 
 <body>
     <h2>請選擇餐點</h2>
+
+    <!-- 類別選擇區域 -->
+    <div id="category-filter">
+        <div class="filter-title">選擇類別：</div>
+        <div class="filter-buttons">
+            <button type="button" class="filter-btn active" data-category="all">全部</button>
+            <button type="button" class="filter-btn" data-category="主餐類">主餐類</button>
+            <button type="button" class="filter-btn" data-category="點心類">點心類</button>
+            <button type="button" class="filter-btn" data-category="蛋餅類">蛋餅類</button>
+            <button type="button" class="filter-btn" data-category="飲料類">飲料類</button>
+        </div>
+    </div>
+
     <form id="orderForm">
         <div id="menu-list">
-            <div class="menu-item">
-                <img src="/static/za42-listing.jpg" alt="漢堡" width="80"><br>
-                <label>餐點：
-                    <select name="item">
-                        <option value="漢堡">漢堡</>
-                        <option value="薯條">薯條</>
-                    </select>
-                </label>
-                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
+            <div class="menu-category-section" data-category="主餐類">
+                <div class="menu-category">主餐類</div>
+                <div class="category-items">
+                    <div class="menu-item">
+                        <img src="/static/hamburger.jpg" alt="漢堡" width="60">
+                        <div class="item-info">
+                            <span class="item-name">漢堡</span>
+                            <span class="item-price">$80</span>
+                            <label>數量：<input type="number" name="quantity" data-item="漢堡" data-price="80" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/hamburger.jpg" alt="起司豬排漢堡" width="60">
+                        <div class="item-info">
+                            <span class="item-name">起司豬排漢堡</span>
+                            <span class="item-price">$100</span>
+                            <label>數量：<input type="number" name="quantity" data-item="起司豬排漢堡" data-price="100" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/noodle.jpg" alt="鐵板麵" width="60">
+                        <div class="item-info">
+                            <span class="item-name">鐵板麵</span>
+                            <span class="item-price">$75</span>
+                            <label>數量：<input type="number" name="quantity" data-item="鐵板麵" data-price="75" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/Pot_Burn_Noodles.jpg" alt="鍋燒意麵" width="60">
+                        <div class="item-info">
+                            <span class="item-name">鍋燒意麵</span>
+                            <span class="item-price">$95</span>
+                            <label>數量：<input type="number" name="quantity" data-item="鍋燒意麵" data-price="95" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="menu-item">
-                <img src="/static/za42-listing.jpg" alt="薯條" width="80"><br>
-                <label>餐點：
-                    <select name="item">
-                        <option value="漢堡">漢堡</>
-                        <option value="薯條">薯條</>
-                    </select>
-                </label>
-                <label>數量：<input type="number" name="quantity" min="0" value="0"></label>
+
+            <div class="menu-category-section" data-category="點心類">
+                <div class="menu-category">點心類</div>
+                <div class="category-items">
+                    <div class="menu-item">
+                        <img src="/static/french_fries.jpg" alt="薯條" width="60">
+                        <div class="item-info">
+                            <span class="item-name">薯條</span>
+                            <span class="item-price">$40</span>
+                            <label>數量：<input type="number" name="quantity" data-item="薯條" data-price="40" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/onion_ring.jpg" alt="洋蔥圈" width="60">
+                        <div class="item-info">
+                            <span class="item-name">洋蔥圈</span>
+                            <span class="item-price">$50</span>
+                            <label>數量：<input type="number" name="quantity" data-item="洋蔥圈" data-price="50" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/hotdog.jpg" alt="熱狗" width="60">
+                        <div class="item-info">
+                            <span class="item-name">熱狗</span>
+                            <span class="item-price">$35</span>
+                            <label>數量：<input type="number" name="quantity" data-item="熱狗" data-price="35" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/hash_brown.jpg" alt="薯餅" width="60">
+                        <div class="item-info">
+                            <span class="item-name">薯餅</span>
+                            <span class="item-price">$35</span>
+                            <label>數量：<input type="number" name="quantity" data-item="薯餅" data-price="35" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <!-- 可依需求新增更多餐點 -->
+
+            <div class="menu-category-section" data-category="蛋餅類">
+                <div class="menu-category">蛋餅類</div>
+                <div class="category-items">
+                    <div class="menu-item">
+                        <img src="/static/Chinese omelet.jpg" alt="原味蛋餅" width="60">
+                        <div class="item-info">
+                            <span class="item-name">原味蛋餅</span>
+                            <span class="item-price">$30</span>
+                            <label>數量：<input type="number" name="quantity" data-item="原味蛋餅" data-price="30" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/corn_kernel.jpg" alt="玉米蛋餅" width="60">
+                        <div class="item-info">
+                            <span class="item-name">玉米蛋餅</span>
+                            <span class="item-price">$35</span>
+                            <label>數量：<input type="number" name="quantity" data-item="玉米蛋餅" data-price="35" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/hotdog_chinese_omelet.jpg" alt="熱狗蛋餅" width="60">
+                        <div class="item-info">
+                            <span class="item-name">熱狗蛋餅</span>
+                            <span class="item-price">$45</span>
+                            <label>數量：<input type="number" name="quantity" data-item="熱狗蛋餅" data-price="45" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <img src="/static/ham.jpg" alt="熱狗蛋餅" width="60">
+                    <div class="item-info">
+                        <span class="item-name">火腿蛋餅</span>
+                        <span class="item-price">$55</span>
+                        <label>數量：<input type="number" name="quantity" data-item="火腿蛋餅" data-price="55" min="0"
+                                value="0"></label>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="menu-category-section" data-category="飲料類">
+                <div class="menu-category">飲料類</div>
+                <div class="category-items">
+                    <div class="menu-item">
+                        <img src="/static/blacktea.jpg" alt="紅茶" width="60">
+                        <div class="item-info">
+                            <span class="item-name">紅茶</span>
+                            <span class="item-price">$25</span>
+                            <label>數量：<input type="number" name="quantity" data-item="紅茶" data-price="25" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/soy_milk.jpg" alt="豆漿" width="60">
+                        <div class="item-info">
+                            <span class="item-name">豆漿</span>
+                            <span class="item-price">$20</span>
+                            <label>數量：<input type="number" name="quantity" data-item="豆漿" data-price="20" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <img src="/static/milktea.jpg" alt="奶茶" width="60">
+                        <div class="item-info">
+                            <span class="item-name">奶茶</span>
+                            <span class="item-price">$35</span>
+                            <label>數量：<input type="number" name="quantity" data-item="奶茶" data-price="35" min="0"
+                                    value="0"></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <img src="/static/tea.jpg" alt="綠茶" width="60">
+                    <div class="item-info">
+                        <span class="item-name">綠茶</span>
+                        <span class="item-price">$25</span>
+                        <label>數量：<input type="number" name="quantity" data-item="綠茶" data-price="25" min="0"
+                                value="0"></label>
+                    </div>
+                </div>
+                </div>
+            </div>
         </div>
+
+        <!-- 改善的總金額顯示區域 -->
+        <div id="total-section">
+            <div id="total-amount">總金額：$0</div>
+        </div>
+
         <button type="submit">送出訂單</button>
     </form>
     <div id="result"></div>
     <script>
+        // 計算總金額的函數
+        function calculateTotal() {
+            let total = 0;
+            document.querySelectorAll('input[name="quantity"]').forEach(input => {
+                const quantity = parseInt(input.value) || 0;
+                const price = parseInt(input.getAttribute('data-price')) || 0;
+                total += quantity * price;
+            });
+            document.getElementById('total-amount').textContent = `總金額：$${total}`;
+            return total;
+        }
+
+        // 監聽數量變化
+        document.querySelectorAll('input[name="quantity"]').forEach(input => {
+            input.addEventListener('input', calculateTotal);
+        });
+
+        // 類別篩選功能
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+
+                const selectedCategory = this.getAttribute('data-category');
+                const allSections = document.querySelectorAll('.menu-category-section');
+
+                if (selectedCategory === 'all') {
+                    allSections.forEach(section => {
+                        section.style.display = 'block';
+                    });
+                } else {
+                    allSections.forEach(section => {
+                        if (section.getAttribute('data-category') === selectedCategory) {
+                            section.style.display = 'block';
+                        } else {
+                            section.style.display = 'none';
+                        }
+                    });
+                }
+            });
+        });
+
+        // 表單提交功能（修改結果顯示部分）
         document.getElementById('orderForm').onsubmit = async function (e) {
             e.preventDefault();
             const items = [];
-            document.querySelectorAll('.menu-item').forEach(div => {
-                const item = div.querySelector('select[name="item"]').value;
-                const quantity = parseInt(div.querySelector('input[name="quantity"]').value);
-                if (quantity > 0) items.push({ name: item, quantity });
+            let totalAmount = 0;
+
+            document.querySelectorAll('input[name="quantity"]').forEach(input => {
+                const quantity = parseInt(input.value);
+                const itemName = input.getAttribute('data-item');
+                const price = parseInt(input.getAttribute('data-price'));
+                if (quantity > 0) {
+                    items.push({ name: itemName, quantity, price });
+                    totalAmount += quantity * price;
+                }
             });
+
             if (items.length === 0) {
-                document.getElementById('result').innerHTML = '請至少選擇一項餐點';
+                document.getElementById('result').innerHTML = '<div style="color: red; font-weight: bold; text-align: center; padding: 20px;">請至少選擇一項餐點</div>';
                 return;
             }
-            const data = { user_id: 'guest', items };
+
+            const data = { user_id: 'guest', items, total_amount: totalAmount };
+
             const res = await fetch('/order', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                    // ... existing code ...
+                },
                 body: JSON.stringify(data)
             });
+
             const result = await res.json();
-            document.getElementById('result').innerHTML = '您的訂單已送出，訂單編號(order_id)：' + result.order_id;
+
+            // 改善的訂單結果顯示
+            let resultHTML = '<div class="order-success">';
+            resultHTML += '<div class="success-icon">✅</div>';
+            resultHTML += '<div class="success-message">您的訂單已送出！</div>';
+            resultHTML += '<div class="order-id-container">';
+            resultHTML += '<span class="order-id-label">訂單編號</span>';
+            resultHTML += '<span class="order-id-number">' + result.order_id + '</span>';
+            resultHTML += '</div>';
+            resultHTML += '<div class="total-info">';
+            resultHTML += '<div class="original-total">原價：$' + result.original_total + '</div>';
+
+            if (result.discount > 0) {
+                resultHTML += '<div class="discount">🎉 優惠折扣：-$' + result.discount + '</div>';
+            }
+
+            resultHTML += '<div class="final-total">💰 應付金額：$' + result.final_total + '</div>';
+            resultHTML += '<div class="checkout-notice">🏪 請至櫃台結帳</div>';
+            resultHTML += '</div>';
+            resultHTML += '</div>';
+
+            document.getElementById('result').innerHTML = resultHTML;
+
+            // 滾動到結果區域
+            document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
         };
     </script>
 </body>
