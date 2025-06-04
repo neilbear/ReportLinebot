@@ -150,9 +150,17 @@ def init_db():
 def order_page():
     return send_from_directory('html', 'order.html')
 
+@app.route('/information', methods=['GET'])
+def information_page():
+    return send_from_directory('html', 'information.html')
+
 @app.route('/html/<path:filename>')
 def serve_html(filename):
     return send_from_directory('html', filename)
+
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    return send_from_directory('static', filename)
 
 user_query_status = {}
 
